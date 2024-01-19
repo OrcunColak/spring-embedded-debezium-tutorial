@@ -1,0 +1,27 @@
+# https://nmihaylov.medium.com/setting-up-a-local-mongodb-replica-set-with-a-single-node-e04fb3213123
+# For DB population idea is from https://github.com/docker-library/mongo/issues/339#issuecomment-1166441526
+version: '3.9'
+services:
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    restart: always
+    tmpfs: /data/db
+    volumes:
+      - ./mongo-init.js:/mongo-init.js
+    ports:
+      - "27017:27017"
+    # The parameters instruct the Mongo instance, that it’s part of a replica set named dbrs and that it should bind all IP addresses.
+    command: [ "--replSet", "dbrs", "--bind_ip_all" ]
+    healthcheck:
+      test: mongosh /mongo-init.js
+      interval: 5s
+
+  postgres-db:
+    image: postgres:15.3-alpine
+    container_name: postgres-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
